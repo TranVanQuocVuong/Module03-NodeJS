@@ -1,6 +1,9 @@
 var express = require("express");
 var router = express.Router();
 var fs = require('fs');
+var checkExistId = require("../middleware/checkExistId.js");
+var checkExistTitle = require("../middleware/checkExistTitle.js");
+
 
 router.get('/', (req, res) => {
     var data = fs.readFileSync('./dev-data/questions.json', 'utf8')
@@ -8,65 +11,52 @@ router.get('/', (req, res) => {
     res.send(JSON.parse(data))
 })
 
-router.get('/:id', (req, res) => {
+router.get('/:id', checkExistId, (req, res) => {
     // console.log(req);
     const idUser = req.params.id;
-    var data = fs.readFileSync('./dev-data/questions.json', 'utf8')
-    const database = JSON.parse(data)
-    const index = database.findIndex((item) => {
+    var data = JSON.parse(fs.readFileSync('./dev-data/questions.json', 'utf8'))
+    const index = data.findIndex((item) => {
         return item.id == idUser;
     })
-    res.send(database[index].content)
+    res.send(data[index].content)
 })
 
-router.post('/', (req, res) => {
+router.post('/', checkExistTitle, (req, res) => {
     const user = req.body;
-    var data = fs.readFileSync('./dev-data/questions.json', 'utf8')
-    const database = JSON.parse(data)
-    const index = database.findIndex((item) => {
+    var data = JSON.parse(fs.readFileSync('./dev-data/questions.json', 'utf8'))
+    const index = data.findIndex((item) => {
         return item.content == user.content;
     })
     if (index == -1) {
-        database.push(user)
-        fs.writeFileSync('./dev-data/questions.json', JSON.stringify(database))
+        data.push(user)
+        fs.writeFileSync('./dev-data/questions.json', JSON.stringify(data))
         res.status(201).json({message:"Create successfully"})
-    }
-    else{
-        res.status(201).json({message:"Question already exists"})
     }
 })
 
-router.put('/:id', (req, res) => {
+router.put('/:id',checkExistId, (req, res) => {
     const idUser = req.params.id
     const newUser = req.body
-    const data = fs.readFileSync('./dev-data/questions.json', 'utf8')
-    const database = JSON.parse(data)
-    const indexPut = database.findIndex((item)=>{
+    const data = JSON.parse(fs.readFileSync('./dev-data/questions.json', 'utf8'))
+    const index = data.findIndex((item)=>{
         return item.id == idUser
     })
-    if (indexPut == -1) {
-        res.status(201).json({message:"Question not found"})
-    }
-    else{
-        database.splice(indexPut, 1, newUser)
-        fs.writeFileSync('./dev-data/questions.json', JSON.stringify(database))
+    if (index != -1) {
+        data.splice(index, 1, newUser)
+        fs.writeFileSync('./dev-data/questions.json', JSON.stringify(data))
         res.status(201).json({message:"Update successfully"})
     }
 })
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', checkExistId, (req, res) => {
     const idUser = req.params.id
-    var data = fs.readFileSync('./dev-data/questions.json', 'utf-8')
-    const database = JSON.parse(data)
-    const indexDelete = database.findIndex((item) => {
+    var data = JSON.parse(fs.readFileSync('./dev-data/questions.json', 'utf-8'))
+    const index = data.findIndex((item) => {
         return item.id == idUser;
     })
-    if (indexDelete == -1) {
-        res.status(201).json({message:"Question not found"})
-    }
-    else{
-        database.splice(indexDelete, 1)
-        fs.writeFileSync('./dev-data/questions.json', JSON.stringify(database))
+    if (index != -1) {
+        data.splice(index, 1)
+        fs.writeFileSync('./dev-data/questions.json', JSON.stringify(data))
         res.status(201).json({message:"Delete successfully"})
     }
 })
